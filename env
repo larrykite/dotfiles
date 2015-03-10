@@ -1,0 +1,146 @@
+# Path to your oh-my-zsh configuration.
+SAVEHIST=200000
+HISTSIZE=200000
+DEFAULT_USER=larry
+CASE_SENSITIVE="true"
+
+HIST_STAMPS="mm/dd/yyyy"
+ENABLE_CORRECTION="false"
+
+export GOPATH=/home/larry/gocode
+export PATH=$PATH:$GOPATH/bin
+export DS_NOTEBOOK=notebook
+export PYTHONPATH=${HOME}/bin:${HOME}/python:$PYTHONPATH
+export PATH=${HOME}/bin:${HOME}/bin/customer:/usr/local/go/bin:${HOME}/dev/julia:${HOME}/dev/csvkit/csvkit/utilities:$PATH
+export EDITOR=ecn
+export BROWSER=$(which chromium-browser)
+export R_LIBS="${HOME}/R_libs"
+
+
+[[ -s $HOME/.rvm/scripts/rvm ]] && source $HOME/.rvm/scripts/rvm
+
+
+
+export WORKON_HOME="$HOME/.virtualenvs"
+export PROJECT_HOME="$HOME/pyprojects"
+export VIRTUAL_ENV_DISABLE_PROMPT=1
+
+PATH=$PATH:$HOME/.rvm/bin # Add RVM to PATH for scripting
+
+
+zstyle ':completion:*' verbose yes
+zstyle ':completion:*:descriptions' format '%B%d%b'
+zstyle ':completion:*:messages' format '%d'
+zstyle ':completion:*:warnings' format 'No matches for: %d'
+zstyle ':completion:*' group-name
+fpath=(
+	$fpath
+    /home/larry/.zsh/completion
+    /media/bigdisk/src/zsh-completions
+	/home/larry/.zen/zsh/scripts
+	/home/larry/.zen/zsh/zle )
+autoload -U zen
+
+unalias run-help
+autoload run-help
+setopt dotglob
+HELPDIR=${HOME}/zsh_help
+
+autoload -Uz bashcompinit
+bashcompinit
+autoload -Uz zmv
+source /etc/bash_completion.d/skytree-server
+source /etc/bash_completion.d/virtualenvwrapper
+source "${HOME}/.bash_completion.d/python-argcomplete.sh"
+source "${HOME}/bin/SCO-completion-script.sh"
+ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern cursor)
+ZSH_HIGHLIGHT_PATTERNS+=('rm -rf *' 'fg=white,bold,bg=red')
+
+
+# A shortcut function that simplifies usage of xclip.
+# - Accepts input from either stdin (pipe), or params.
+# ------------------------------------------------
+cb() {
+  local _scs_col="\e[0;32m"; local _wrn_col='\e[1;31m'; local _trn_col='\e[0;33m'
+  # Check that xclip is installed.
+  if ! type xclip > /dev/null 2>&1; then
+    echo -e "$_wrn_col""You must have the 'xclip' program installed.\e[0m"
+  # Check user is not root (root doesn't have access to user xorg server)
+  elif [[ "$USER" == "root" ]]; then
+    echo -e "$_wrn_col""Must be regular user (not root) to copy a file to the clipboard.\e[0m"
+  else
+    # If no tty, data should be available on stdin
+    if ! [[ "$( tty )" == /dev/* ]]; then
+      input="$(< /dev/stdin)"
+    # Else, fetch input from params
+    else
+      input="$*"
+    fi
+    if [ -z "$input" ]; then  # If no input, print usage message.
+      echo "Copies a string to the clipboard."
+      echo "Usage: cb <string>"
+      echo "       echo <string> | cb"
+    else
+      # Copy input to clipboard
+      echo -n "$input" | xclip -selection c
+      # Truncate text for status
+      if [ ${#input} -gt 80 ]; then input="$(echo $input | cut -c1-80)$_trn_col...\e[0m"; fi
+      # Print status.
+      echo -e "$_scs_col""Copied to clipboard:\e[0m $input"
+    fi
+  fi
+}
+# Aliases / functions leveraging the cb() function
+# ------------------------------------------------
+# Copy contents of a file
+function cbf() { cat "$1" | cb; }
+# Copy SSH public key
+alias cbssh="cbf ~/.ssh/id_rsa.pub"
+# Copy current working directory
+alias cbwd="pwd | cb"
+# Copy most recent command in bash history
+alias cbhs="fc -l | tail -n 1 | sed -e 's/^[0-9 ]\+//' | cb"
+# remove duplicates from PATH
+typeset -U PATH
+export VAGRANT_HOME='/media/bigdisk/vagrant.d'
+eval $(dircolors ${HOME}/src/dircolors-solarized/dircolors.ansi-dark)
+
+xmodmap -e 'keycode 22 = NoSymbol'
+#export PATH=/home/larry/anaconda/bin:$PATH
+typeset -Ag abbreviations
+abbreviations=(
+  "Im"    "| more"
+  "Ia"    "| awk"
+  "Ig"    "| grep"
+  "Ieg"   "| egrep"
+  "Iag"   "| agrep"
+  "Igr"   "| groff -s -p -t -e -Tlatin1 -mandoc"
+  "Ip"    "| $PAGER"
+  "Ih"    "| head"
+  "Ik"    "| keep"
+  "It"    "| tail"
+  "Is"    "| sort"
+  "Iv"    "| ${VISUAL:-${EDITOR}}"
+  "Iw"    "| wc"
+  "Ix"    "| xargs"
+  "Ish"   "| sort -h"
+)
+
+magic-abbrev-expand() {
+    local MATCH
+    LBUFFER=${LBUFFER%%(#m)[_a-zA-Z0-9]#}
+    LBUFFER+=${abbreviations[$MATCH]:-$MATCH}
+    zle self-insert
+}
+
+no-magic-abbrev-expand() {
+  LBUFFER+=' '
+}
+
+zle -N magic-abbrev-expand
+zle -N no-magic-abbrev-expand
+bindkey " " magic-abbrev-expand
+bindkey "^x " no-magic-abbrev-expand
+bindkey -M isearch " " self-insert
+setopt CSH_NULL_GLOB
+source /home/larry/src/zaw/zaw.zsh

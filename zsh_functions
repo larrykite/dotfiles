@@ -1,0 +1,498 @@
+#!/usr/local/bin/zsh
+# shell functions. Some are specific to zsh, but most will run in bash.
+
+bign ()
+{
+    zmodload zsh/stat
+    ls -fld ./**/*(d`stat +device .`OL[1,${1}])
+}
+
+
+
+lcat ()
+{
+    sed = ${1} | sed 'N;s/\n/\t/'
+}
+
+rcat ()
+{
+    sed = ${1} | sed 'N; s/^/     /; s/ *(.{6,})\n/1  /'
+}
+
+add-alias ()
+{
+   local name=$1 value="$2"
+   echo alias $name=\'$value\' >>~/zsh_aliases
+   eval alias $name=\'$value\'
+   alias $name
+}
+
+add-aliasg ()
+{
+   local name=$1 value="$2"
+   echo alias -g $name=\'$value\' >>~/zsh_aliases
+   eval alias -g $name=\'$value\'
+   alias $name
+}
+
+function cat_csv_list () {
+    cat $1 | tr ',' '\n' | awk '{ print NR, $1 }'
+}
+
+function cdf() { cd *$1*/ }
+
+# function cfstats () {
+#     let numcols=`head -2 $1 | tail -1 | grep -o "," | wc -l`
+#     numcols=numcols+1
+#     let count=0
+#     while [ $count -lt $numcols ]
+#     do
+#         count=$count+1
+#         echo -n "$count  "
+#         cstats $1 $count
+#     done
+# }
+
+function cl () {
+    let x=`grep -o "^$2" "$1" | wc -l`
+    let y=`grep -o "^$3" "$1" | wc -l`
+    echo $x
+    echo $y
+    echo "$x/($x+$y)" | bc -l
+}
+
+function clc () {
+    let x=`sed 1d $1 | cut -d, -f$2 | grep -o "^1" | wc -l`
+    let y=`sed 1d $1 | cut -d, -f$2 | grep -o "^-1" | wc -l`
+    echo 1 :$x
+    echo -1:$y
+    echo "$x/($x+$y)" | bc -l
+}
+
+
+function commas () {
+    grep -o "," "$1" | wc -l
+}
+
+# report number of instances of labels 1 and -1 in labels file and the
+# relative proportion
+function count_labels () {
+    let x=`grep -o "^1" "$1" | wc -l`
+    let y=`grep -o "^-" "$1" | wc -l`
+    echo $x
+    echo $y
+    echo "$x/($x+$y)" | bc -l
+}
+
+# function cstats () {
+#     cut -d, -f $2 $1 | colstats
+# }
+
+# pretty print csv column names from header line, with ordinal numbering
+function csv_fields () {
+    head -1 "$1" | sed -e 's/ //g' -e 's/,/\n/g' | awk '{ print NR,$1 }'
+}
+
+function csv_fields_p () {
+    head -1 "$1" | sed -e 's/ //g' -e 's/|/\n/g' | awk '{ print NR,$1 }'
+}
+
+# another, more parsimonious, way to print csv column names
+function display_csv_header () {
+    head -1 $1 | tr ',' '\n' | awk '{ print NR, $1 }'
+}
+
+function dupes () {
+    find -not -empty -type f -printf "%s\n" \
+        | sort -rn \
+        | uniq -d \
+        | xargs -I{} -n1 find -type f -size {}c -print0 \
+        | xargs -0 md5sum \
+        | sort \
+        | uniq -w32 --all-repeated=separate
+}
+
+function etf()
+{
+    echo "$1" >> $2
+}
+
+extract_archive () {
+    local old_dirs current_dirs lower
+    lower=${(L)1}
+    old_dirs=( *(N/) )
+    if [[ $lower == *.tar.gz || $lower == *.tgz ]]; then
+        tar zxfv $1
+    elif [[ $lower == *.gz ]]; then
+        gunzip $1
+    elif [[ $lower == *.tar.bz2 || $lower == *.tbz ]]; then
+        bunzip2 -c $1 | tar xfv -
+    elif [[ $lower == *.bz2 ]]; then
+        bunzip2 $1
+    elif [[ $lower == *.zip ]]; then
+        unzip $1
+    elif [[ $lower == *.rar ]]; then
+        unrar e $1
+    elif [[ $lower == *.tar ]]; then
+        tar xfv $1
+    elif [[ $lower == *.lha ]]; then
+        lha e $1
+    else
+        print "Unknown archive type: $1"
+        return 1
+    fi
+    # Change in to the newly created directory, and
+    # list the directory contents, if there is one.
+    current_dirs=( *(N/) )
+    for i in {1..${#current_dirs}}; do
+        if [[ $current_dirs[$i] != $old_dirs[$i] ]]; then
+            cd $current_dirs[$i]
+            ls
+            break
+        fi
+    done
+}
+
+# count number of fields in csv file
+function fields () {
+    csv_file_name="$1"
+    a=$(head -1 $csv_file_name | grep -o "," | wc -l)
+    b=$(($a+1))
+    echo $b
+}
+
+function findx () {
+ find . -name "*.$1" | xargs grep -E "$2"
+}
+
+getc (){
+    sed 1d "$1" |  awk -F"," '{print $1}' > "$2"
+}
+
+# print first and last 5 lines from file
+function i() {
+    (head -n 5; tail -n 5) < "$1"
+}
+
+# show lines $1 to $2 in file $3
+function lb () {
+    awk "NR==$1, NR==$2" "$3"
+}
+
+function lf
+{
+    ls --color=tty --classify $*
+    echo "$(ls -l $* | wc -l) files"
+}
+
+mcd () {
+        mkdir -p "$1" && cd "$1"
+}
+
+function num_cols() {
+    let numcols=`head -2 $1 | tail -1 | grep -o "," | wc -l`
+    numcols=numcols+1
+    echo $numcols
+}
+
+function setenv () {
+  export $1="$2"
+}
+
+# report number of non-data lines in st file
+function st_skip_lines () {
+    ignore_lines=$(($(grep -o "^#" "$1" | wc -l)+2))
+    echo ${ignore_lines}
+}
+
+# report number of comment lines in st file
+function st_comment_lines () {
+    ignore_lines=$(($(grep -o "^#" "$1" | wc -l)))
+    echo ${ignore_lines}
+}
+
+# report number of data lines in st file
+function st_data_lines () {
+    sed 1,$(st_skip_lines "$1")d "$1" | wc -l
+}
+
+function uncomment () {
+    sed 1,$(st_comment_lines "$1")d "$1"
+}
+
+# turn skytree file into csv. useful for using data with R and sklearn
+st_to_r () {
+    cat <(uncomment "$1" | head -n 2 | tail -n 1 | sed 's/attribute_names://') <(uncomment "$1" | sed 1,2d | cut -d, -f1-3 --complement)
+}
+
+# report sum of column $2 in file $1
+sum_col () {
+    cat "$1" | awk -v myvar="$2" -F "," '{ sum += $myvar } END { printf "%.2f\n", sum}'
+}
+
+function topten()
+{
+    fc -l 1 | awk '{a[$2]++}END{for(i in a){print a[i] " " i}}' | sort -rn | head -10
+}
+
+function topk()
+{
+    fc -l 1 | awk '{a[$2]++}END{for(i in a){print a[i] " " i}}' | sort -rn | head -$1
+}
+
+function tuneprint () {
+    workon ${DS_NOTEBOOK}
+    python -c "import pandas as pd; import sys; pd.read_csv(sys.stdin).iloc[:,[0,1,2,5,8,9,10,13,14]].to_csv('tmp',index=False,float_format='%6.4f')" && sed -e 's/prob\. thresh\./thresh/g' -e 's/ //g' -e 's/Num\.//g' -e 's/Tree//g' tmp | column -s, -t
+}
+
+function tuneprintc () {
+    tune_file="$1"
+    column_list="[$2]"
+    workon ${DS_NOTEBOOK}
+    python -c "import pandas as pd; import sys; c=[int(x)-1 for x in $column_list];pd.read_csv(\"${tune_file}\").iloc[:,c].to_csv('tmp',index=False,float_format='%6.4f')" && sed -e 's/prob\. thresh\./thresh/g' -e 's/ //g' -e 's/Num\.//g' -e 's/Tree//g' tmp | column -s, -t MM
+}
+
+function tuneprintf () {
+    tune_file="$1"
+    workon ${DS_NOTEBOOK}
+    python -c "import pandas as pd; import sys; pd.read_csv(\"${tune_file}\").iloc[:,[0,1,2,5,8,9,10,13,14]].to_csv('tmp',index=False,float_format='%6.4f')" && sed -e 's/prob\. thresh\./thresh/g' -e 's/ //g' -e 's/Num\.//g' -e 's/Tree//g' tmp | column -s, -t MM
+}
+
+# -------------------------------------------------------------------
+# nice mount (http://catonmat.net/blog/another-ten-one-liners-from-commandlingfu-explained)
+# displays mounted drive information in a nicely formatted manner
+# -------------------------------------------------------------------
+function nicemount() { (echo "DEVICE PATH TYPE FLAGS" && mount | awk '$2="";1') | column -t ; }
+
+# -------------------------------------------------------------------
+# myIP address
+# -------------------------------------------------------------------
+function myip() {
+  ifconfig lo0 | grep 'inet ' | sed -e 's/:/ /' | awk '{print "lo0       : " $2}'
+  ifconfig en0 | grep 'inet ' | sed -e 's/:/ /' | awk '{print "en0 (IPv4): " $2 " " $3 " " $4 " " $5 " " $6}'
+  ifconfig en0 | grep 'inet6 ' | sed -e 's/ / /' | awk '{print "en0 (IPv6): " $2 " " $3 " " $4 " " $5 " " $6}'
+  ifconfig en1 | grep 'inet ' | sed -e 's/:/ /' | awk '{print "en1 (IPv4): " $2 " " $3 " " $4 " " $5 " " $6}'
+  ifconfig en1 | grep 'inet6 ' | sed -e 's/ / /' | awk '{print "en1 (IPv6): " $2 " " $3 " " $4 " " $5 " " $6}'
+}
+
+# -------------------------------------------------------------------
+# (s)ave or (i)nsert a directory.
+# -------------------------------------------------------------------
+s() { pwd > ~/.save_dir ; }
+i() { cd "$(cat ~/.save_dir)" ; }
+
+# -------------------------------------------------------------------
+# console function
+# -------------------------------------------------------------------
+function console () {
+  if [[ $# > 0 ]]; then
+    query=$(echo "$*"|tr -s ' ' '|')
+    tail -f /var/log/system.log|grep -i --color=auto -E "$query"
+  else
+    tail -f /var/log/system.log
+  fi
+}
+
+# -------------------------------------------------------------------
+# shell function to define words
+# http://vikros.tumblr.com/post/23750050330/cute-little-function-time
+# -------------------------------------------------------------------
+givedef() {
+  if [[ $# -ge 2 ]] then
+    echo "givedef: too many arguments" >&2
+    return 1
+  else
+    curl "http://www.dict.org/d:$1"
+  fi
+}
+
+# --------------------------------------------------------------------
+# ps with a grep
+# from http://hiltmon.com/blog/2013/07/30/quick-process-search/
+# --------------------------------------------------------------------
+function psax() {
+  ps auxwwwh | grep "$@" | grep -v grep
+}
+
+
+# -------------------------------------------------------------------
+# compressed file expander
+# (from https://github.com/myfreeweb/zshuery/blob/master/zshuery.sh)
+# -------------------------------------------------------------------
+ex() {
+    if [[ -f $1 ]]; then
+        case $1 in
+          *.tar.bz2) tar xvjf $1;;
+          *.tar.gz) tar xvzf $1;;
+          *.tar.xz) tar xvJf $1;;
+          *.tar.lzma) tar --lzma xvf $1;;
+          *.bz2) bunzip $1;;
+          *.rar) unrar $1;;
+          *.gz) gunzip $1;;
+          *.tar) tar xvf $1;;
+          *.tbz2) tar xvjf $1;;
+          *.tgz) tar xvzf $1;;
+          *.zip) unzip $1;;
+          *.Z) uncompress $1;;
+          *.7z) 7z x $1;;
+          *.dmg) hdiutul mount $1;; # mount OS X disk images
+          *) echo "'$1' cannot be extracted via >ex<";;
+    esac
+    else
+        echo "'$1' is not a valid file"
+    fi
+}
+
+# -------------------------------------------------------------------
+# Find files and exec commands at them.
+# $ find-exec .coffee cat | wc -l
+# # => 9762
+# from https://github.com/paulmillr/dotfiles
+# -------------------------------------------------------------------
+function find-exec() {
+  find . -type f -iname "*${1:-}*" -exec "${2:-file}" '{}' \;
+}
+
+# -------------------------------------------------------------------
+# Count code lines in some directory.
+# $ loc py js css
+# # => Lines of code for .py: 3781
+# # => Lines of code for .js: 3354
+# # => Lines of code for .css: 2970
+# # => Total lines of code: 10105
+# from https://github.com/paulmillr/dotfiles
+# -------------------------------------------------------------------
+function loc() {
+  local total
+  local firstletter
+  local ext
+  local lines
+  total=0
+  for ext in $@; do
+    firstletter=$(echo $ext | cut -c1-1)
+    if [[ firstletter != "." ]]; then
+      ext=".$ext"
+    fi
+    lines=`find-exec "*$ext" cat | wc -l`
+    lines=${lines// /}
+    total=$(($total + $lines))
+    echo "Lines of code for ${fg[blue]}$ext${reset_color}: ${fg[green]}$lines${reset_color}"
+  done
+  echo "${fg[blue]}Total${reset_color} lines of code: ${fg[green]}$total${reset_color}"
+}
+
+# -------------------------------------------------------------------
+# Show how much RAM application uses.
+# $ ram safari
+# # => safari uses 154.69 MBs of RAM.
+# from https://github.com/paulmillr/dotfiles
+# -------------------------------------------------------------------
+function ram() {
+  local sum
+  local items
+  local app="$1"
+  if [ -z "$app" ]; then
+    echo "First argument - pattern to grep from processes"
+  else
+    sum=0
+    for i in `ps aux | grep -i "$app" | grep -v "grep" | awk '{print $6}'`; do
+      sum=$(($i + $sum))
+    done
+    sum=$(echo "scale=2; $sum / 1024.0" | bc)
+    if [[ $sum != "0" ]]; then
+      echo "${fg[blue]}${app}${reset_color} uses ${fg[green]}${sum}${reset_color} MBs of RAM."
+    else
+      echo "There are no processes with pattern '${fg[blue]}${app}${reset_color}' are running."
+    fi
+  fi
+}
+
+# -------------------------------------------------------------------
+# any function from http://onethingwell.org/post/14669173541/any
+# search for running processes
+# -------------------------------------------------------------------
+any() {
+    emulate -L zsh
+    unsetopt KSH_ARRAYS
+    if [[ -z "$1" ]] ; then
+        echo "any - grep for process(es) by keyword" >&2
+        echo "Usage: any " >&2 ; return 1
+    else
+        ps xauwww | grep -i --color=auto "[${1[1]}]${1[2,-1]}"
+    fi
+}
+
+# -------------------------------------------------------------------
+# display a neatly formatted path
+# -------------------------------------------------------------------
+path() {
+  echo $PATH | tr ":" "\n" | \
+    awk "{ sub(\"/usr\",   \"$fg_no_bold[green]/usr$reset_color\"); \
+           sub(\"/bin\",   \"$fg_no_bold[blue]/bin$reset_color\"); \
+           sub(\"/opt\",   \"$fg_no_bold[cyan]/opt$reset_color\"); \
+           sub(\"/sbin\",  \"$fg_no_bold[magenta]/sbin$reset_color\"); \
+           sub(\"/local\", \"$fg_no_bold[yellow]/local$reset_color\"); \
+           sub(\"/.rvm\",  \"$fg_no_bold[red]/.rvm$reset_color\"); \
+           print }"
+}
+
+function openstdoc () {
+    docname=$(ls /opt/skytree/SkytreeServer/docs | grep 'UserGuide')
+    evince /opt/skytree/SkytreeServer/docs/${docname}&
+
+}
+
+function st_data () {
+    sed 1,$(st_skip_lines "${1}")d "${1}"
+}
+function st_data_with_header () {
+    sed 1,$(st_comment_lines "${1}")d "${1}"
+}
+
+function chth () { source ~/.oh-my-zsh/themes/${1}.zsh-theme }
+
+function auc_to_gini () { echo $(( 2 * ${1} - 1 )) }
+
+function gini_to_auc () { echo $(( (${1} + 1) / 2 )) }
+
+# A shortcut function that simplifies usage of xclip.
+# - Accepts input from either stdin (pipe), or params.
+# ------------------------------------------------
+cb() {
+  local _scs_col="\e[0;32m"; local _wrn_col='\e[1;31m'; local _trn_col='\e[0;33m'
+  # Check that xclip is installed.
+  if ! type xclip > /dev/null 2>&1; then
+    echo -e "$_wrn_col""You must have the 'xclip' program installed.\e[0m"
+  # Check user is not root (root doesn't have access to user xorg server)
+  elif [[ "$USER" == "root" ]]; then
+    echo -e "$_wrn_col""Must be regular user (not root) to copy a file to the clipboard.\e[0m"
+  else
+    # If no tty, data should be available on stdin
+    if ! [[ "$( tty )" == /dev/* ]]; then
+      input="$(< /dev/stdin)"
+    # Else, fetch input from params
+    else
+      input="$*"
+    fi
+    if [ -z "$input" ]; then  # If no input, print usage message.
+      echo "Copies a string to the clipboard."
+      echo "Usage: cb <string>"
+      echo "       echo <string> | cb"
+    else
+      # Copy input to clipboard
+      echo -n "$input" | xclip -selection c
+      # Truncate text for status
+      if [ ${#input} -gt 80 ]; then input="$(echo $input | cut -c1-80)$_trn_col...\e[0m"; fi
+      # Print status.
+      echo -e "$_scs_col""Copied to clipboard:\e[0m $input"
+    fi
+  fi
+}
+# Aliases / functions leveraging the cb() function
+# ------------------------------------------------
+# Copy contents of a file
+function cbf() { cat "$1" | cb; }
+
+function sthelp () {
+    skytree-server $1 --help | most
+}

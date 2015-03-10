@@ -1,0 +1,31 @@
+source /home/larry/src/antigen/antigen.zsh
+
+antigen use oh-my-zsh
+
+antigen bundles <<EOBUNDLES
+        git
+        pip
+        lein
+        history
+        vagrant
+        colored-man
+        pip
+        gnu-utils
+        python
+        github
+        debian
+        cp
+        git-extras
+        zsh-users/zsh-syntax-highlighting
+        command-not-found
+        history-substring-search
+        /home/larry/dotfiles/custom
+        rupa/z
+EOBUNDLES
+
+antigen theme ~/.oh-my-zsh/themes larry
+
+antigen apply
+
+
+source /home/larry/dotfiles/env
