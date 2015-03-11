@@ -97,22 +97,7 @@ else
     source ${HOME}/.iterm2_shell_integration.zsh
 
     fpath=(/usr/local/share/zsh-completions $fpath)
-    export PATH=/usr/local/opt/coreutils/libexec/gnubin:\
-           /usr/local/share/npm/bin:\
-           /usr/local/bin:\
-           /usr/local/sbin:\
-           ${HOME}/bin:\
-           ${HOME}/scripts:\
-           /usr/local/opt/ruby/bin:\
-           /usr/local/opt/gnu-sed/libexec/gnubin:\
-           ${HOME}/dev/julia:\
-           /usr/bin:\
-           /bin:\
-           /usr/sbin:\
-           /sbin:\
-           /opt/X11/bin:\
-           /Applications/domino:\
-           /usr/local/opt/go/libexec/bin
+    export PATH=/usr/local/opt/coreutils/libexec/gnubin:/usr/local/share/npm/bin:/usr/local/bin:/usr/local/sbin:${HOME}/bin:${HOME}/scripts:/usr/local/opt/ruby/bin:/usr/local/opt/gnu-sed/libexec/gnubin:${HOME}/dev/julia:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin:/Applications/domino:/usr/local/opt/go/libexec/bin
 
 fi
 
