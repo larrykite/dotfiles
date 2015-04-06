@@ -92,7 +92,7 @@ if [ $SYSTYPE = "Linux" ]; then
 	/home/larry/.zen/zsh/zle )
     HELPDIR=${HOME}/zsh_help
     export VAGRANT_HOME='/media/bigdisk/vagrant.d'
-    eval $(dircolors ${HOME}/src/dircolors-solarized/dircolors.ansi-dark)
+    [ -f ${HOME}/src/dircolors-solarized/dircolors.ansi-dark ] && eval $(dircolors ${HOME}/src/dircolors-solarized/dircolors.ansi-dark)
 
     # disable backspace key (to encourage exclusive use of caps-lock as BS)
     xmodmap -e 'keycode 22 = NoSymbol'
