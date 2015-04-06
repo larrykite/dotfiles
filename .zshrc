@@ -2,7 +2,8 @@
 ZSH=$HOME/.oh-my-zsh
 SYSTYPE=$(uname -s)
 if [ $SYSTYPE = "Linux" ]; then
-    ZSH_THEME="larry"
+    ZSH_THEME="steeef"
+    RPROMPT='%{$FG[012]%}%*%{$reset_color%}'
     DEFAULT_USER=larry
     plugins=(history docker scala vagrant colored-man pip gnu-utils git github python \
                      debian cp git-extras zsh-syntax-highlighting z catimg dircycle dirhistory \
@@ -66,13 +67,16 @@ autoload -Uz zmv
 [ -f /etc/bash_completion.d/skytree-server ] && source /etc/bash_completion.d/skytree-server
 
 if [ $SYSTYPE = "Linux" ]; then
+    thisHost=$(uname -n)
     export GOPATH=/home/larry/gocode
     export PATH=$PATH:$GOPATH/bin
     export DS_NOTEBOOK=notebook
     export PYTHONPATH=${HOME}/bin:${HOME}/python:$PYTHONPATH
     export PATH=${HOME}/bin:${HOME}/bin/customer:/usr/local/go/bin:${HOME}/dev/julia:${HOME}/dev/csvkit/csvkit/utilities:$PATH
     PATH=$PATH:$HOME/.rvm/bin # Add RVM to PATH for scripting
-    export BROWSER=$(which chromium-browser)
+    if [[ $thisHost != *"node"* ]]; then
+	export BROWSER=$(which chromium-browser)
+    fi
     export R_LIBS="${HOME}/R_libs"
     export WORKON_HOME="$HOME/.virtualenvs"
     export PROJECT_HOME="$HOME/pyprojects"
@@ -205,3 +209,4 @@ setopt CSH_NULL_GLOB
 
 
 [[ -s $HOME/.rvm/scripts/rvm ]] && source $HOME/.rvm/scripts/rvm
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
