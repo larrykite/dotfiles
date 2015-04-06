@@ -95,7 +95,9 @@ if [ $SYSTYPE = "Linux" ]; then
     [ -f ${HOME}/src/dircolors-solarized/dircolors.ansi-dark ] && eval $(dircolors ${HOME}/src/dircolors-solarized/dircolors.ansi-dark)
 
     # disable backspace key (to encourage exclusive use of caps-lock as BS)
-    xmodmap -e 'keycode 22 = NoSymbol'
+    if [[ $thisHost == *"xtc"* ]]; then
+	xmodmap -e 'keycode 22 = NoSymbol'
+    fi
     [ -f $HOME/src/zaw/zaw.zsh ] && source $HOME/src/zaw/zaw.zsh
 else
     HELPDIR=/usr/local/share/zsh/helpfiles
