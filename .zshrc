@@ -5,8 +5,10 @@ if [ $SYSTYPE = "Linux" ]; then
     ZSH_THEME="steeef"
     RPROMPT='%{$FG[012]%}%*%{$reset_color%}'
     DEFAULT_USER=larry
-    plugins=(history docker scala vagrant colored-man pip gnu-utils git github python \
-                     debian cp git-extras zsh-syntax-highlighting z catimg dircycle dirhistory \
+    plugins=(history docker scala vagrant colored-man \
+		     pip gnu-utils git github python \
+                     debian cp git-extras zsh-syntax-highlighting \
+		     z catimg dircycle dirhistory \
                      command-not-found history-substring-search)
 
 else
@@ -58,7 +60,7 @@ SAVEHIST=200000
 HISTSIZE=200000
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern cursor)
 ZSH_HIGHLIGHT_PATTERNS+=('rm -rf *' 'fg=white,bold,bg=red')
-unalias run-help
+#unalias run-help
 autoload run-help
 setopt dotglob
 autoload -Uz bashcompinit
@@ -83,18 +85,18 @@ if [ $SYSTYPE = "Linux" ]; then
     export VIRTUAL_ENV_DISABLE_PROMPT=1
     [ -f /etc/bash_completion.d/virtualenvwrapper ] && source /etc/bash_completion.d/virtualenvwrapper
     fpath=(
-	    $fpath
+	$fpath
         /home/larry/.zsh/completion
         /media/bigdisk/src/zsh-completions
-	    /home/larry/.zen/zsh/scripts
-	    /home/larry/.zen/zsh/zle )
+	/home/larry/.zen/zsh/scripts
+	/home/larry/.zen/zsh/zle )
     HELPDIR=${HOME}/zsh_help
     export VAGRANT_HOME='/media/bigdisk/vagrant.d'
     eval $(dircolors ${HOME}/src/dircolors-solarized/dircolors.ansi-dark)
 
     # disable backspace key (to encourage exclusive use of caps-lock as BS)
     xmodmap -e 'keycode 22 = NoSymbol'
-    source /home/larry/src/zaw/zaw.zsh
+    [ -f $HOME/src/zaw/zaw.zsh ] && source $HOME/src/zaw/zaw.zsh
 else
     HELPDIR=/usr/local/share/zsh/helpfiles
     source `brew --repository`/Library/Contributions/brew_bash_completion.sh
