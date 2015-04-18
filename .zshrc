@@ -4,8 +4,9 @@ SYSTYPE=$(uname -s)
 if [ $SYSTYPE = "Linux" ]; then
     ZSH_THEME="larry"
     DEFAULT_USER=larry
-    plugins=(history docker scala vagrant colored-man pip gnu-utils git github python \
-                     debian cp git-extras zsh-syntax-highlighting z catimg dircycle dirhistory \
+    plugins=(history docker scala vagrant colored-man pip gnu-utils \
+                     git github python debian cp git-extras \
+                     zsh-syntax-highlighting z catimg dircycle dirhistory \
                      command-not-found history-substring-search)
 
 else
@@ -24,8 +25,8 @@ else
     export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig"
     export DS_NOTEBOOK=default
     export VIRTUAL_ENV_DISABLE_PROMPT=1
-    plugins=(github python brew git svn osx cp git-extras sublime \
-                    zsh-syntax-highlighting history-substring-search )
+    plugins=(python brew git github git-extras osx cp sublime z \
+                    history-substring-search )
     alias mysql=/usr/local/mysql/bin/mysql
     alias mysqladmin=/usr/local/mysql/bin/mysqladmin
     export WORKON_HOME=$HOME/.virtualenvs
@@ -92,18 +93,20 @@ if [ $SYSTYPE = "Linux" ]; then
     xmodmap -e 'keycode 22 = NoSymbol'
     source /home/larry/src/zaw/zaw.zsh
 else
+    eval $(dircolors ${HOME}/src/dircolors-solarized/dircolors.ansi-dark)
     HELPDIR=/usr/local/share/zsh/helpfiles
     source `brew --repository`/Library/Contributions/brew_bash_completion.sh
     source ${HOME}/.iterm2_shell_integration.zsh
 
     fpath=(/usr/local/share/zsh-completions $fpath)
     export PATH=/usr/local/opt/coreutils/libexec/gnubin:/usr/local/share/npm/bin:/usr/local/bin:/usr/local/sbin:${HOME}/bin:${HOME}/scripts:/usr/local/opt/ruby/bin:/usr/local/opt/gnu-sed/libexec/gnubin:${HOME}/dev/julia:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin:/Applications/domino:/usr/local/opt/go/libexec/bin
-
+    source /usr/local/Cellar/zsh-syntax-highlighting/0.2.1/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
 
 [ -f $HOME/zsh_aliases ] && source $HOME/zsh_aliases
 [ -f $HOME/zsh_functions ] && source $HOME/zsh_functions
-
+export LESS="-R"
+export EDITOR=emacs
 
 compdef '_files -g "*.gz *.tgz *.bz2 *.tbz *.zip *.rar *.tar *.lha"' extract_archive
 # [ -f "${HOME}/.bash_completion.d/python-argcomplete.sh" ] && source "${HOME}/.bash_completion.d/python-argcomplete.sh"
@@ -205,3 +208,4 @@ setopt CSH_NULL_GLOB
 
 
 [[ -s $HOME/.rvm/scripts/rvm ]] && source $HOME/.rvm/scripts/rvm
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
