@@ -120,7 +120,6 @@ alias kess='less'
 alias lahs='lh | sort -k 5 -h'
 alias lasr='ls -laSr'
 alias lat='ls -lat'
-alias less='most'
 alias lg='ls -latr G'
 alias lh='ls -latrh'
 alias ls-honda-scripts='ls -l ~/Data/Honda/Modeling/Scripts'
@@ -182,3 +181,5 @@ alias cbssh="cbf ~/.ssh/id_rsa.pub"
 alias cbwd="pwd | cb"
 # Copy most recent command in bash history
 alias cbhs="fc -l | tail -n 1 | sed -e 's/^[0-9 ]\+//' | cb"
+alias funfact='wget randomfunfacts.com -O - 2>/dev/null | tee lastfact | grep \<strong\> | sed "s;^.*<i>\(.*\)</i>.*$;\1;"'
+command -v most >/dev/null 2>&1 && alias less='most'
