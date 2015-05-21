@@ -213,7 +213,7 @@ bindkey " " magic-abbrev-expand
 bindkey "^x " no-magic-abbrev-expand
 bindkey -M isearch " " self-insert
 setopt CSH_NULL_GLOB
-
+export EDITOR=emacs
 
 [[ -s $HOME/.rvm/scripts/rvm ]] && source $HOME/.rvm/scripts/rvm
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

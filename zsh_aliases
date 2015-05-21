@@ -183,3 +183,6 @@ alias cbwd="pwd | cb"
 alias cbhs="fc -l | tail -n 1 | sed -e 's/^[0-9 ]\+//' | cb"
 alias funfact='wget randomfunfacts.com -O - 2>/dev/null | tee lastfact | grep \<strong\> | sed "s;^.*<i>\(.*\)</i>.*$;\1;"'
 command -v most >/dev/null 2>&1 && alias less='most'
+#alias pf2='pf | cut -c1-40 | column -s "==" -x -t -c 2'
+alias ppf='pf | tr "=" " " | grep "^[^-]"| column -t'
+
