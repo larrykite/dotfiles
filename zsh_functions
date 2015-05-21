@@ -1,23 +1,45 @@
 #!/usr/local/bin/zsh
 # shell functions. Some are specific to zsh, but most will run in bash.
 
+first_last () {
+    head -n 10 -- "$1"
+    tail -n 10 -- "$1"
+}
+
+number () {
+    # number all non-empty lines in file
+    sed '/./=' "${1}" | sed 'N; s/\n/ /'
+}
+
+minfo () {
+    info coreutils "${1} invocation"
+}
+
 bign ()
 {
     zmodload zsh/stat
     ls -fld ./**/*(d`stat +device .`OL[1,${1}])
 }
 
-
+running ()
+{
+    ps aux | grep "${1}"
+}
 
 lcat ()
 {
     sed = ${1} | sed 'N;s/\n/\t/'
 }
 
-rcat ()
-{
-    sed = ${1} | sed 'N; s/^/     /; s/ *(.{6,})\n/1  /'
+# rcat ()
+# {
+#     sed = ${1} | sed 'N; s/^/     /; s/ *(.{6,})\n/1  /'
+# }
+
+rcat () {
+    sed -n '1!G;h;$p' "${1}"
 }
+
 
 add-alias ()
 {
