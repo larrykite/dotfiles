@@ -173,7 +173,7 @@ alias ltrh='ls -latrh'
 alias emacs24='emacs'
 alias ipyspark='IPYTHON_OPTS="qtconsole" ~/src/apache-spark/bin/pyspark'
 alias pdfopen='pdfopen -viewer evince'
-alias zshrc='emacs ~/.zshrc&'
+alias zshrc='emacs ~/dotfiles/.zshrc&'
 alias ldot='ls -ld .*'
 # Copy SSH public key
 alias cbssh="cbf ~/.ssh/id_rsa.pub"
