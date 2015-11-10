@@ -217,3 +217,4 @@ export EDITOR=emacs
 
 [[ -s $HOME/.rvm/scripts/rvm ]] && source $HOME/.rvm/scripts/rvm
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+eval "$(thefuck --alias)"
