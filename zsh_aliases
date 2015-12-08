@@ -184,6 +184,7 @@ alias cbwd="pwd | cb"
 # Copy most recent command in bash history
 alias cbhs="fc -l | tail -n 1 | sed -e 's/^[0-9 ]\+//' | cb"
 alias funfact='wget randomfunfacts.com -O - 2>/dev/null | tee lastfact | grep \<strong\> | sed "s;^.*<i>\(.*\)</i>.*$;\1;"'
+
 command -v most >/dev/null 2>&1 && alias less='most'
 alias ppf='pf | tr "=" " " | grep "^[^-]"| column -t' | column
 alias deac='deactivate'
