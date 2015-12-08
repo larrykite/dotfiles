@@ -5,13 +5,15 @@ if [ $SYSTYPE = "Linux" ]; then
     ZSH_THEME="steeef"
     RPROMPT='%{$FG[012]%}%*%{$reset_color%}'
     DEFAULT_USER=larry
-
+    export JAVA_HOME=/usr/lib/jvm/java-8-oracle
+    export PATH=$JAVA_HOME/bin:$PATH
+    export PATH=${HOME}/apps/bin:/usr/local/maven/bin:$PATH
     plugins=(history docker scala vagrant colored-man \
-		     pip gnu-utils git github python \
+                     pip gnu-utils git github python \
                      debian cp git-extras zsh-syntax-highlighting \
-		     z catimg dircycle dirhistory \
-                     command-not-found history-substring-search)
-
+                     z catimg dircycle dirhistory \
+                     command-not-found history-substring-search \
+                     virtualenv virtualenvwrapper zsh-navigation-tools)
 else
     ZSH_THEME="steeef"
     DEFAULT_USER=larrykite
@@ -40,7 +42,8 @@ else
     source /usr/local/bin/virtualenvwrapper.sh
 
 fi
-
+setopt noclobber
+setopt histallowclobber
 CASE_SENSITIVE="true"
 HIST_STAMPS="mm/dd/yyyy"
 ENABLE_CORRECTION="false"
@@ -61,7 +64,7 @@ SAVEHIST=200000
 HISTSIZE=200000
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern cursor)
 ZSH_HIGHLIGHT_PATTERNS+=('rm -rf *' 'fg=white,bold,bg=red')
-#unalias run-help
+unalias run-help
 autoload run-help
 setopt dotglob
 autoload -Uz bashcompinit
@@ -78,7 +81,7 @@ if [ $SYSTYPE = "Linux" ]; then
     export PATH=${HOME}/bin:${HOME}/bin/customer:/usr/local/go/bin:${HOME}/dev/julia:${HOME}/dev/csvkit/csvkit/utilities:$PATH
     PATH=$PATH:$HOME/.rvm/bin # Add RVM to PATH for scripting
     if [[ $thisHost != *"node"* ]]; then
-	export BROWSER=$(which chromium-browser)
+        export BROWSER=$(which google-chrome)
     fi
     export R_LIBS="${HOME}/R_libs"
     export WORKON_HOME="$HOME/.virtualenvs"
@@ -86,19 +89,19 @@ if [ $SYSTYPE = "Linux" ]; then
     export VIRTUAL_ENV_DISABLE_PROMPT=1
     [ -f /etc/bash_completion.d/virtualenvwrapper ] && source /etc/bash_completion.d/virtualenvwrapper
     fpath=(
-	$fpath
+        $fpath
         /home/larry/.zsh/completion
         /media/bigdisk/src/zsh-completions
-	/home/larry/.zen/zsh/scripts
-	/home/larry/.zen/zsh/zle )
+        /home/larry/.zen/zsh/scripts
+        /home/larry/.zen/zsh/zle )
     HELPDIR=${HOME}/zsh_help
     export VAGRANT_HOME='/media/bigdisk/vagrant.d'
     [ -f ${HOME}/src/dircolors-solarized/dircolors.ansi-dark ] && eval $(dircolors ${HOME}/src/dircolors-solarized/dircolors.ansi-dark)
 
     # disable backspace key (to encourage exclusive use of caps-lock as BS)
-    if [[ $thisHost == *"xtc"* ]]; then
-	xmodmap -e 'keycode 22 = NoSymbol'
-    fi
+    # if [[ $thisHost == *"xtc"* ]]; then
+    #     xmodmap -e 'keycode 22 = NoSymbol'
+    # fi
     [ -f $HOME/src/zaw/zaw.zsh ] && source $HOME/src/zaw/zaw.zsh
 else
     eval $(dircolors ${HOME}/src/dircolors-solarized/dircolors.ansi-dark)
@@ -107,7 +110,22 @@ else
     source ${HOME}/.iterm2_shell_integration.zsh
 
     fpath=(/usr/local/share/zsh-completions $fpath)
-    export PATH=/usr/local/opt/coreutils/libexec/gnubin:/usr/local/share/npm/bin:/usr/local/bin:/usr/local/sbin:${HOME}/bin:${HOME}/scripts:/usr/local/opt/ruby/bin:/usr/local/opt/gnu-sed/libexec/gnubin:${HOME}/dev/julia:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin:/Applications/domino:/usr/local/opt/go/libexec/bin
+    export PATH=/usr/local/opt/coreutils/libexec/gnubin:\
+           /usr/local/share/npm/bin:\
+           /usr/local/bin:\
+           /usr/local/sbin:\
+           ${HOME}/bin:\
+           ${HOME}/scripts:\
+           /usr/local/opt/ruby/bin:\
+           /usr/local/opt/gnu-sed/libexec/gnubin:\
+           ${HOME}/dev/julia:\
+           /usr/bin:\
+           /bin:\
+           /usr/sbin:\
+           /sbin:\
+           /opt/X11/bin:\
+           /Applications/domino:\
+           /usr/local/opt/go/libexec/bin
     source /usr/local/Cellar/zsh-syntax-highlighting/0.2.1/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
 
@@ -129,7 +147,7 @@ zstyle ':completion:*:messages' format '%d'
 zstyle ':completion:*:warnings' format 'No matches for: %d'
 zstyle ':completion:*' group-name
 
-#source ~/src/powerline/powerline/bindings/zsh/powerline.zsh
+#source /media/bigdisk/src/powerline/powerline/bindings/zsh/powerline.zsh
 
 # A shortcut function that simplifies usage of xclip.
 # - Accepts input from either stdin (pipe), or params.
