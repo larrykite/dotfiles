@@ -186,8 +186,8 @@ alias cbhs="fc -l | tail -n 1 | sed -e 's/^[0-9 ]\+//' | cb"
 alias funfact='wget randomfunfacts.com -O - 2>/dev/null | tee lastfact | grep \<strong\> | sed "s;^.*<i>\(.*\)</i>.*$;\1;"'
 
 command -v most >/dev/null 2>&1 && alias less='most'
-alias ppf='pf | tr "=" " " | grep "^[^-]"| column -t' | column
-alias deac='deactivate'
+# alias ppf='pf | tr "=" " " | grep "^[^-]"| column -t' | column
+alias deac='pyenv deactivate'
 alias smartgit='/home/larry/apps/smartgit/bin/smartgit.sh 2&>/dev/null&'
 alias smartgit-preview='/home/larry/apps/smartgit-preview/bin/smartgit.sh 2&>/dev/null&'
 alias ports='netstat -tulanp'
@@ -199,6 +199,6 @@ alias ntx='run_netextender.sh'
 alias netext='netExtender -u lkite -p Polaris123! -d PolarisWireless vpn2.polariswireless.com'
 alias htop='sudo htop'
 alias pylookup='/home/larry/src/pylookup/pylookup.py'
-alias ppf='pf | tr"=" " " | grep "^[^-]" | column -t | column'
+# alias ppf='pf | tr"=" " " | grep "^[^-]" | column -t | column'
 alias ppf='pf | tr "=" " " | grep "^[^-]" | column -t | column'
 alias sieclust='ssh -i SiPS2.pem ec2-user@52.21.178.168'

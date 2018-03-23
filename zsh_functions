@@ -526,3 +526,4 @@ function cbf() { cat "$1" | cb; }
 function sthelp () {
     skytree-server $1 --help | most
 }
+
