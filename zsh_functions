@@ -1,9 +1,89 @@
 #!/usr/local/bin/zsh
 # shell functions. Some are specific to zsh, but most will run in bash.
 
+# look at first or last rows of csv file through csvlook:
+# lookfun head master_processed.csv    --    show first 5 rows of master_processed.csv
+# lookfun head master_processed.csv 15 --    show first 15 rows of master_processed.csv
+# lookfun tail master_processed.csv    --    show last 5 rows of master_processed.csv
+# lookfun tail master_processed.csv 15 --    show last 15 rows of master_processed.csv
+
+function pyshell () {
+    if [ ! -z "$PYENV_VERSION" ]; then
+	pyenv shell --unset
+    else
+	pyenv shell system
+    fi
+}
+
+
+function emacs_server_is_running () {
+    lsof -c Emacs | grep server | tr -s " " | cut -d' ' -f8
+}
+
+
+function run_emacs () {
+    if lsof -c Emacs >/dev/null; then
+	/Applications/Emacs.app/Contents/MacOS/bin/emacsclient -c -a "" -n "$1"
+    else
+	/Applications/Emacs.app/Contents/MacOS/Emacs --daemon
+	/Applications/Emacs.app/Contents/MacOS/bin/emacsclient -c -a "" -n "$1"
+    fi
+    
+}
+
+
+function lookfun () {
+    if [ $# -gt 2 ]; then
+        numrows=$3
+    else
+        numrows=5
+    fi
+    cat <(head -n 1 $2) <(sed 1d $2 | $1 -n $numrows) | csvlook | most
+}
+
+
+function pdfrange () {
+    gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -dFirstPage="$1" -dLastPage="$2" -sOUTPUTFILE="$3" "$4"
+}
+
+
+scpxoj () {
+    scp "${@}" larry@192.168.2.30:
+}
+
+scpclone () {
+    scp -i "/Users/larrykite/.ssh/xojetRHEL.pem" "${@}" ubuntu@35.160.109.6:
+}
+
+scpshiny () {
+    scp -i "/Users/larrykite/.ssh/xojetRHEL.pem" "${@}" ubuntu@ec2-54-68-244-50.us-west-2.compute.amazonaws.com:
+}
+
+
+
+zman() {
+    PAGER="less -g -s '+/^       "$1"'" man zshall
+}
+
+function csvgrep () {
+    cat <(head -n1 "$2") <(egrep "$1" "$2") | csvlook | most
+}
+
+
+function csvhead () {
+    numlines=${2:=10}
+    head -n "$2" "${1}" | csvlook | most
+}
+
 first_last () {
     head -n 10 -- "$1"
     tail -n 10 -- "$1"
+}
+
+fl () {
+    numlines=${2:=5}
+    head -n $numlines -- "$1"
+    tail -n $numlines -- "$1"
 }
 
 number () {
@@ -23,7 +103,7 @@ bign ()
 
 running ()
 {
-    ps aux | grep "${1}"
+    ps aux | grep -i "${1}"
 }
 
 lcat ()
@@ -36,6 +116,7 @@ lcat ()
 #     sed = ${1} | sed 'N; s/^/     /; s/ *(.{6,})\n/1  /'
 # }
 
+# cat file line by line in reverse
 rcat () {
     sed -n '1!G;h;$p' "${1}"
 }
@@ -116,15 +197,15 @@ function csv_fields () {
 }
 
 function csv_fields_2 () {
-    paste <(csv_fields "$1") <(head -n2 "$1" | tail -n1 | sed -e 's/ //g' -e 's/,/\n/g') | column -t 
+    paste <(csv_fields "$1") <(head -n2 "$1" | tail -n1 | sed -e 's/ //g' -e 's/,/\n/g') | column -t
 }
 
 function csv_fields_3 () {
-    paste <(csv_fields "$1") <(head -n"$2" "$1" | tail -n1 | sed -e 's/ //g' -e 's/,/\n/g') | column -t 
+    paste <(csv_fields "$1") <(head -n"$2" "$1" | tail -n1 | sed -e 's/ //g' -e 's/,/\n/g') | column -t
 }
 
 function csv_fields_p () {
-    head -1 "$1" | sed -e 's/ //g' -e 's/|/\n/g' | awk '{ print NR,$1 }'
+    head -1 "$1" | sed -e 's/|/\n/g' | awk '{ print NR,$1 }'
 }
 
 # another, more parsimonious, way to print csv column names
@@ -305,11 +386,11 @@ function myip() {
   ifconfig en1 | grep 'inet6 ' | sed -e 's/ / /' | awk '{print "en1 (IPv6): " $2 " " $3 " " $4 " " $5 " " $6}'
 }
 
-# -------------------------------------------------------------------
-# (s)ave or (i)nsert a directory.
-# -------------------------------------------------------------------
-s() { pwd > ~/.save_dir ; }
-i() { cd "$(cat ~/.save_dir)" ; }
+# # -------------------------------------------------------------------
+# # (s)ave or (i)nsert a directory.
+# # -------------------------------------------------------------------
+# s() { pwd > ~/.save_dir ; }
+# i() { cd "$(cat ~/.save_dir)" ; }
 
 # -------------------------------------------------------------------
 # console function
@@ -349,29 +430,29 @@ function psax() {
 # compressed file expander
 # (from https://github.com/myfreeweb/zshuery/blob/master/zshuery.sh)
 # -------------------------------------------------------------------
-ex() {
-    if [[ -f $1 ]]; then
-        case $1 in
-          *.tar.bz2) tar xvjf $1;;
-          *.tar.gz) tar xvzf $1;;
-          *.tar.xz) tar xvJf $1;;
-          *.tar.lzma) tar --lzma xvf $1;;
-          *.bz2) bunzip $1;;
-          *.rar) unrar $1;;
-          *.gz) gunzip $1;;
-          *.tar) tar xvf $1;;
-          *.tbz2) tar xvjf $1;;
-          *.tgz) tar xvzf $1;;
-          *.zip) unzip $1;;
-          *.Z) uncompress $1;;
-          *.7z) 7z x $1;;
-          *.dmg) hdiutul mount $1;; # mount OS X disk images
-          *) echo "'$1' cannot be extracted via >ex<";;
-    esac
-    else
-        echo "'$1' is not a valid file"
-    fi
-}
+# ex() {
+#     if [[ -f $1 ]]; then
+#         case $1 in
+#           *.tar.bz2) tar xvjf $1;;
+#           *.tar.gz) tar xvzf $1;;
+#           *.tar.xz) tar xvJf $1;;
+#           *.tar.lzma) tar --lzma xvf $1;;
+#           *.bz2) bunzip $1;;
+#           *.rar) unrar $1;;
+#           *.gz) gunzip $1;;
+#           *.tar) tar xvf $1;;
+#           *.tbz2) tar xvjf $1;;
+#           *.tgz) tar xvzf $1;;
+#           *.zip) unzip $1;;
+#           *.Z) uncompress $1;;
+#           *.7z) 7z x $1;;
+#           *.dmg) hdiutul mount $1;; # mount OS X disk images
+#           *) echo "'$1' cannot be extracted via >ex<";;
+#     esac
+#     else
+#         echo "'$1' is not a valid file"
+#     fi
+# }
 
 # -------------------------------------------------------------------
 # Find files and exec commands at them.
@@ -527,3 +608,29 @@ function sthelp () {
     skytree-server $1 --help | most
 }
 
+function explain {
+  # base url with first command already injected
+  # $ explain tar
+  #   => http://explainshel.com/explain/tar?args=
+  url="http://explainshell.com/explain/$1?args="
+
+  # removes $1 (tar) from arguments ($@)
+  shift;
+
+  # iterates over remaining args and adds builds the rest of the url
+  for i in "$@"; do
+    url=$url"$i""+"
+  done
+
+  # opens url in browser
+  open $url
+}
+
+function csv_header_to_python_list () {
+    csv_fields $1 >| mpfields
+    
+
+}    
+
+
+function decomment () { grep '^[^\#]' $1 }
