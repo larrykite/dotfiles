@@ -7,6 +7,20 @@
 # lookfun tail master_processed.csv    --    show last 5 rows of master_processed.csv
 # lookfun tail master_processed.csv 15 --    show last 15 rows of master_processed.csv
 
+function ccode () {
+    ccat "${1}" | \less -R
+}
+
+function fix_virtualenv () {
+    gfind "/Users/$USER/.virtualenvs/$1/" -type l -xtype l -delete
+    if [ $? -eq 0 ]; then
+	pushd "/Users/$USER/.virtualenvs" >/dev/null 2>&1
+	virtualenv "$1"
+	popd >/dev/null 2>&1
+    fi
+}
+
+
 function pyshell () {
     if [ ! -z "$PYENV_VERSION" ]; then
 	pyenv shell --unset
@@ -44,19 +58,6 @@ function lookfun () {
 
 function pdfrange () {
     gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -dFirstPage="$1" -dLastPage="$2" -sOUTPUTFILE="$3" "$4"
-}
-
-
-scpxoj () {
-    scp "${@}" larry@192.168.2.30:
-}
-
-scpclone () {
-    scp -i "/Users/larrykite/.ssh/xojetRHEL.pem" "${@}" ubuntu@35.160.109.6:
-}
-
-scpshiny () {
-    scp -i "/Users/larrykite/.ssh/xojetRHEL.pem" "${@}" ubuntu@ec2-54-68-244-50.us-west-2.compute.amazonaws.com:
 }
 
 
@@ -634,3 +635,165 @@ function csv_header_to_python_list () {
 
 
 function decomment () { grep '^[^\#]' $1 }
+
+cb() {
+  local _scs_col="\e[0;32m"; local _wrn_col='\e[1;31m'; local _trn_col='\e[0;33m'
+  # Check that xclip is installed.
+  if ! type xclip > /dev/null 2>&1; then
+    echo -e "$_wrn_col""You must have the 'xclip' program installed.\e[0m"
+  # Check user is not root (root doesn't have access to user xorg server)
+  elif [[ "$USER" == "root" ]]; then
+    echo -e "$_wrn_col""Must be regular user (not root) to copy a file to the clipboard.\e[0m"
+  else
+    # If no tty, data should be available on stdin
+    if ! [[ "$( tty )" == /dev/* ]]; then
+      input="$(< /dev/stdin)"
+    # Else, fetch input from params
+    else
+      input="$*"
+    fi
+    if [ -z "$input" ]; then  # If no input, print usage message.
+      echo "Copies a string to the clipboard."
+      echo "Usage: cb <string>"
+      echo "       echo <string> | cb"
+    else
+      # Copy input to clipboard
+      echo -n "$input" | xclip -selection c
+      # Truncate text for status
+      if [ ${#input} -gt 80 ]; then input="$(echo $input | cut -c1-80)$_trn_col...\e[0m"; fi
+      # Print status.
+      echo -e "$_scs_col""Copied to clipboard:\e[0m $input"
+    fi
+  fi
+}
+# Aliases / functions leveraging the cb() function
+# ------------------------------------------------
+# Copy contents of a file
+function cbf() { cat "$1" | cb; }
+
+typeset -Ag abbreviations
+abbreviations=(
+  "Im"    "| most"
+  "Ia"    "| awk"
+  "Ig"    "| grep"
+  "Ieg"   "| egrep"
+  "Iag"   "| agrep"
+  "Igr"   "| groff -s -p -t -e -Tlatin1 -mandoc"
+  "Ip"    "| $PAGER"
+  "Ih"    "| head"
+  "Ik"    "| keep"
+  "It"    "| tail"
+  "Is"    "| sort"
+  "Iv"    "| ${VISUAL:-${EDITOR}}"
+  "Iw"    "| wc"
+  "Ix"    "| xargs"
+  "Ish"   "| sort -h"
+)
+
+magic-abbrev-expand() {
+    local MATCH
+    LBUFFER=${LBUFFER%%(#m)[_a-zA-Z0-9]#}
+    LBUFFER+=${abbreviations[$MATCH]:-$MATCH}
+    zle self-insert
+}
+
+no-magic-abbrev-expand() {
+  LBUFFER+=' '
+}
+
+zle -N magic-abbrev-expand
+zle -N no-magic-abbrev-expand
+bindkey " " magic-abbrev-expand
+bindkey "^x " no-magic-abbrev-expand
+bindkey -M isearch " " self-insert
+
+
+
+# GIT heart FZF
+# -------------
+if alias gf > /dev/null; then
+    unalias gf
+    unalias gb
+    unalias gr
+fi
+
+is_in_git_repo() {
+  git rev-parse HEAD > /dev/null 2>&1
+}
+
+fzf-down() {
+  fzf --height 50% "$@" --border
+}
+
+gf() {
+  is_in_git_repo || return
+  git -c color.status=always status --short |
+  fzf-down -m --ansi --nth 2..,.. \
+    --preview '(git diff --color=always -- {-1} | sed 1,4d; cat {-1}) | head -500' |
+  cut -c4- | sed 's/.* -> //'
+}
+
+gb() {
+  is_in_git_repo || return
+  git branch -a --color=always | grep -v '/HEAD\s' | sort |
+  fzf-down --ansi --multi --tac --preview-window right:70% \
+    --preview 'git log --oneline --graph --date=short --pretty="format:%C(auto)%cd %h%d %s" $(sed s/^..// <<< {} | cut -d" " -f1) | head -'$LINES |
+  sed 's/^..//' | cut -d' ' -f1 |
+  sed 's#^remotes/##'
+}
+
+gt() {
+  is_in_git_repo || return
+  git tag --sort -version:refname |
+  fzf-down --multi --preview-window right:70% \
+    --preview 'git show --color=always {} | head -'$LINES
+}
+
+gh() {
+  is_in_git_repo || return
+  git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" --graph --color=always |
+  fzf-down --ansi --no-sort --reverse --multi --bind 'ctrl-s:toggle-sort' \
+    --header 'Press CTRL-S to toggle sort' \
+    --preview 'grep -o "[a-f0-9]\{7,\}" <<< {} | xargs git show --color=always | head -'$LINES |
+  grep -o "[a-f0-9]\{7,\}"
+}
+
+gr() {
+  is_in_git_repo || return
+  git remote -v | awk '{print $1 "\t" $2}' | uniq |
+  fzf-down --tac \
+    --preview 'git log --oneline --graph --date=short --pretty="format:%C(auto)%cd %h%d %s" {1} | head -200' |
+  cut -d$'\t' -f1
+}
+
+join-lines() {
+  local item
+  while read item; do
+    echo -n "${(q)item} "
+  done
+}
+
+bind-git-helper() {
+  local char
+  for c in $@; do
+    eval "fzf-g$c-widget() { local result=\$(g$c | join-lines); zle reset-prompt; LBUFFER+=\$result }"
+    eval "zle -N fzf-g$c-widget"
+    eval "bindkey '^g^$c' fzf-g$c-widget"
+  done
+}
+bind-git-helper f b t r h
+unset -f bind-git-helper
+
+
+removecontainers() {
+    docker stop $(docker ps -aq)
+    docker rm $(docker ps -aq)
+}
+
+armaggedon() {
+    removecontainers
+    docker network prune -f
+    docker rmi -f $(docker images --filter dangling=true -qa)
+    docker volume rm $(docker volume ls --filter dangling=true -q)
+    docker rmi -f $(docker images -qa)
+}
