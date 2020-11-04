@@ -7,15 +7,52 @@
 # lookfun tail master_processed.csv    --    show last 5 rows of master_processed.csv
 # lookfun tail master_processed.csv 15 --    show last 15 rows of master_processed.csv
 
+
+
+function envmatch() {
+    wtversion=$(python -c "from git import Repo; repo = Repo('.'); print(repo.commit('HEAD').hexsha)")
+    envversion=$(pip freeze | grep pipe | egrep -o "[0-9a-f]{40}")
+    if [[ "${wtversion}" = "${envversion}" ]]; then
+	echo "Repo worktree HEAD matches version installed in virtualenv: "
+    else
+	echo "Repo worktree version NOT INSTALLED in virtualenv"
+    fi
+}
+
+function gfc() {
+         git log --all --grep="$1"
+}
+
+function gcp() {
+      git commit -am "$1" && git push 
+}
+
+function fmodon () {
+    qdate="${1}"
+    rdate=$(date '+%Y-%m-%d' -d "$qdate+1 days")
+    gfind . -newermt "$qdate" ! -newermt "$rdate" -ls 
+}
+
+function fmodfrom () {
+    qdate="${1}"
+    num_days="${2}"
+    rdate=$(date '+%Y-%m-%d' -d "$qdate+${num_days} days")
+    gfind . -newermt "$qdate" ! -newermt "$rdate" -ls 
+}
+
+
+
 function ccode () {
     ccat "${1}" | \less -R
 }
 
 function fix_virtualenv () {
+    python_version=${2:-python3}
     gfind "/Users/$USER/.virtualenvs/$1/" -type l -xtype l -delete
     if [ $? -eq 0 ]; then
 	pushd "/Users/$USER/.virtualenvs" >/dev/null 2>&1
-	virtualenv "$1"
+	echo virtualenv -p "${python_version}" "$1"
+	virtualenv -p "${python_version}" "$1"
 	popd >/dev/null 2>&1
     fi
 }
@@ -29,20 +66,32 @@ function pyshell () {
     fi
 }
 
-
 function emacs_server_is_running () {
-    lsof -c Emacs | grep server | tr -s " " | cut -d' ' -f8
+    server_name=${1:-server}
+    lsof -c Emacs | grep emacs | grep "/${server_name}$"
 }
 
 
 function run_emacs () {
-    if lsof -c Emacs >/dev/null; then
-	/Applications/Emacs.app/Contents/MacOS/bin/emacsclient -c -a "" -n "$1"
+    if emacs_server_is_running ${2} >/dev/null; then
+	if [ "$#" -lt 2 ]; then
+	    echo "opening window on existing anonymous daemon"
+	    /Applications/Emacs.app/Contents/MacOS/bin/emacsclient -c -a "" -n "$1"
+	else
+	    echo "opening window on existing daemon $2"
+	    /Applications/Emacs.app/Contents/MacOS/bin/emacsclient -s "$2" -c -a "" -n "$1"
+	fi
     else
-	/Applications/Emacs.app/Contents/MacOS/Emacs --daemon
-	/Applications/Emacs.app/Contents/MacOS/bin/emacsclient -c -a "" -n "$1"
+	if [ "$#" -lt 2 ]; then
+	    echo "starting anonymous daemon. Opening file $1"
+	    /Applications/Emacs.app/Contents/MacOS/Emacs --daemon
+	    /Applications/Emacs.app/Contents/MacOS/bin/emacsclient -c -a "" -n "$1"
+	else
+	    echo "starting daemon called $2. Opening file $1"
+	    /Applications/Emacs.app/Contents/MacOS/Emacs --daemon="$2"
+	    /Applications/Emacs.app/Contents/MacOS/bin/emacsclient -s "$2" -c -a "" -n "$1"
+	fi
     fi
-    
 }
 
 
@@ -548,6 +597,17 @@ path() {
            print }"
 }
 
+pythonpath() {
+  echo $PYTHONPATH | tr ":" "\n" | \
+    awk "{ sub(\"/K1\",   \"$fg_no_bold[green]/K1$reset_color\"); \
+           sub(\"/bin\",   \"$fg_no_bold[blue]/bin$reset_color\"); \
+           sub(\"/projects\",   \"$fg_no_bold[cyan]/projects$reset_color\"); \
+           sub(\"/sbin\",  \"$fg_no_bold[magenta]/sbin$reset_color\"); \
+           sub(\"/local\", \"$fg_no_bold[yellow]/local$reset_color\"); \
+           sub(\"/.rvm\",  \"$fg_no_bold[red]/.rvm$reset_color\"); \
+           print }"
+}
+
 function openstdoc () {
     docname=$(ls /opt/skytree/SkytreeServer/docs | grep 'UserGuide')
     evince /opt/skytree/SkytreeServer/docs/${docname}&
@@ -726,14 +786,14 @@ fzf-down() {
 }
 
 gf() {
-  is_in_git_repo || return
-  git -c color.status=always status --short |
-  fzf-down -m --ansi --nth 2..,.. \
-    --preview '(git diff --color=always -- {-1} | sed 1,4d; cat {-1}) | head -500' |
-  cut -c4- | sed 's/.* -> //'
+    is_in_git_repo || return
+    git -c color.status=always status --short |
+	fzf-down -m --ansi --nth 2..,.. \
+		 --preview '(git diff --color=always -- {-1} | sed 1,4d; cat {-1}) | head -500' |
+	cut -c4- | sed 's/.* -> //'
 }
 
-gb() {
+gtb() {
   is_in_git_repo || return
   git branch -a --color=always | grep -v '/HEAD\s' | sort |
   fzf-down --ansi --multi --tac --preview-window right:70% \
@@ -742,7 +802,7 @@ gb() {
   sed 's#^remotes/##'
 }
 
-gt() {
+gtt() {
   is_in_git_repo || return
   git tag --sort -version:refname |
   fzf-down --multi --preview-window right:70% \
@@ -758,7 +818,7 @@ gh() {
   grep -o "[a-f0-9]\{7,\}"
 }
 
-gr() {
+grr() {
   is_in_git_repo || return
   git remote -v | awk '{print $1 "\t" $2}' | uniq |
   fzf-down --tac \
@@ -797,3 +857,13 @@ armaggedon() {
     docker volume rm $(docker volume ls --filter dangling=true -q)
     docker rmi -f $(docker images -qa)
 }
+
+myless () {
+	if [[ "$1" = *.py ]]
+	then
+		ccode "$1"
+	else
+		most "$1"
+	fi
+}
+function f() { find . -iname "*$1*" ${@:2} }
