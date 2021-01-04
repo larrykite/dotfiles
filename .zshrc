@@ -129,14 +129,6 @@ export PATH="/usr/local/opt/node@12/bin:$PATH"
 typeset -U PATH
 
 myssid=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I | awk '/ SSID/ {print substr($0, index($0, $2))}')
-if [[ $myssid = "Qkpwm"* ]]; then
-    export ALL_PROXY="http://${DEFAULT_USER}:${tps}@amweb.ey.net:8080"
-    git config --global http.proxy "http://${DEFAULT_USER}:${tps}@amweb.ey.net:8080"
-    git config --global https.proxy "https://${DEFAULT_USER}:${tps}@amweb.ey.net:8443"
-else
-    git config --global --unset http.proxy
-    git config --global --unset https.proxy
-fi
 
 # pip zsh completion start
 function _pip_completion {
