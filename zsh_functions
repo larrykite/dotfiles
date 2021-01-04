@@ -867,3 +867,11 @@ myless () {
 	fi
 }
 function f() { find . -iname "*$1*" ${@:2} }
+
+wttr()
+{
+    # change Paris to your default location
+    local request="wttr.in/${1-LosGatos}"
+    [ "$(tput cols)" -lt 125 ] && request+='?n'
+    curl -H "Accept-Language: ${LANG%_*}" --compressed "$request"
+}
